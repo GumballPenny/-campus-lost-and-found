@@ -1,5 +1,7 @@
 package com.example.lostfound;
 
+import com.example.lostfound.domain.LostItemPolicy;
+import com.example.lostfound.domain.LostItemStatus;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
