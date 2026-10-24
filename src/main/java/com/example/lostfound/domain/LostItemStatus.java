@@ -1,4 +1,4 @@
-package com.example.lostfound;
+package com.example.lostfound.domain;
 
 public enum LostItemStatus {
     REPORTED,
