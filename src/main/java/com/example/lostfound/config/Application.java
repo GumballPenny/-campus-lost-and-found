@@ -8,13 +8,15 @@ import com.example.lostfound.domain.TransitionRule;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 
 import java.util.List;
 
 @SpringBootApplication(scanBasePackages = "com.example.lostfound")
 @EntityScan("com.example.lostfound.persistence")
+@ConfigurationPropertiesScan("com.example.lostfound.config")
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

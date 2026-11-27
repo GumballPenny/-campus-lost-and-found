@@ -1,8 +1,10 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/css}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+  profiles:
+    default: dev
   jpa:
     hibernate:
       ddl-auto: validate
@@ -13,3 +15,31 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: false
     out-of-order: false
+
+server:
+  error:
+    include-exception: false
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: Campus Lost & Found
+    description: Lost item registration and lookup service
+
+app:
+  jwt:
+    issuer: campus-lost-and-found
