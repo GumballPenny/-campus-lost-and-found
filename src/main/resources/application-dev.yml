@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/css}
+    username: ${DB_USERNAME:css}
+    password: ${DB_PASSWORD:css}
+
+app:
+  jwt:
+    secret: ${CSS_JWT_SECRET:campus-classroom-key-for-lab5-change-in-prod-2026}
+  dev:
+    password: ${CSS_DEV_PASSWORD:campus-dev}
+  downstream:
+    base-url: ${DOWNSTREAM_BASE_URL:http://localhost:9090}
+    timeout: ${DOWNSTREAM_TIMEOUT:2s}

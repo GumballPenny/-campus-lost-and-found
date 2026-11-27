@@ -35,4 +35,20 @@ public class LostItemEntity {
         this.status = status;
         this.title = title;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getBusinessKey() {
+        return businessKey;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getTitle() {
+        return title;
+    }
 }
