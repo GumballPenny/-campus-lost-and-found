@@ -13,20 +13,22 @@
 <main>
 <header><div><span class="eyebrow">CAMPUS COMMUNITY</span><h1>Потеряли? Найдём.</h1><p>Зарегистрируйте вещь и отслеживайте её статус.</p></div><div class="user-pill" id="identity">Вы не вошли</div></header>
 <section class="auth-card" id="auth-card">
-<div class="auth-story"><span class="eyebrow">ВАШ АККАУНТ</span><h2>Один шаг<br>до находки.</h2><p>FINDER регистрирует и читает предметы.<br>CUSTODIAN подтверждает находку.</p><div class="dev-note"><strong>Учебный режим dev</strong><br>finder / custodian · пароль campus-dev</div></div>
-<div class="auth-form-area"><div class="tabs"><button type="button" class="tab active" data-tab="login">Войти</button></div>
+<div class="auth-story"><span class="eyebrow">ВАШ АККАУНТ</span><h2>Один шаг<br>до находки.</h2><p>FINDER регистрирует и читает предметы.<br>CUSTODIAN подтверждает находку.</p><div class="dev-note"><strong>Учебный режим dev</strong><br>finder / custodian · пароль campus-dev<br>В final зарегистрируйте собственный аккаунт.</div></div>
+<div class="auth-form-area"><div class="tabs"><button type="button" class="tab active" data-tab="login">Войти</button><button type="button" class="tab" data-tab="register">Регистрация</button></div>
 <form id="auth-form"><label>Логин<input id="username" autocomplete="username" placeholder="Например, campus.user" required></label>
+<label class="register-only hidden">Ваше имя<input id="display-name" autocomplete="name" maxlength="80" placeholder="Как к вам обращаться"></label>
 <label>Пароль<input id="password" type="password" autocomplete="current-password" placeholder="Ваш пароль" required maxlength="72"></label>
+<label class="register-only hidden">Приглашение CUSTODIAN <small>необязательно</small><input id="invitation" type="password" autocomplete="off" placeholder="Без приглашения создаётся FINDER"></label>
 <button class="primary" id="auth-submit">Войти в аккаунт <span>↗</span></button>
 <p class="muted" id="auth-help">JWT хранится только в памяти этой вкладки.</p></form>
 <div id="auth-error" role="alert" aria-live="polite"></div></div>
 </section>
 <section class="session-card hidden" id="session-card"><div><span class="eyebrow">ВЫ В СИСТЕМЕ</span><h2 id="welcome"></h2><p id="roles"></p></div><div><span id="expires" class="muted"></span><button type="button" id="logout" class="secondary">Выйти</button></div></section>
 <section class="workspace">
-<div class="section-title"><div><span class="eyebrow">БЮРО НАХОДОК</span><h2>Вещи и их истории</h2></div></div>
+<div class="section-title"><div><span class="eyebrow">БЮРО НАХОДОК</span><h2>Вещи и их истории</h2></div><button type="button" id="refresh" class="secondary">↻ Обновить</button></div>
 <div class="forms-grid">
 <article class="card"><span class="step">01 / СООБЩИТЬ О ПОТЕРЕ</span><h3>Новая запись</h3><form id="create-form"><label>Бизнес-ключ<input id="business-key" placeholder="LF-2026-001" autocomplete="off"></label><label>Что потеряли?<input id="item-title" placeholder="Чёрный телефон" maxlength="121" autocomplete="off"></label><button class="primary">Зарегистрировать <span>+</span></button></form></article>
-<article class="card"><span class="step">02 / ПРОВЕРИТЬ ЗАПИСЬ</span><h3>Поиск по UUID</h3><form id="find-form"><label>Идентификатор предмета<input id="item-id" placeholder="UUID из ответа при создании" autocomplete="off"></label><p class="muted">UUID сохраняет связь с записью после перезапуска приложения.</p><button class="secondary wide">Найти предмет <span>↗</span></button></form><button type="button" id="anonymous" class="text-button">Проверить вызов без токена → 401</button></article>
+<article class="card"><span class="step">02 / ПРОВЕРИТЬ ЗАПИСЬ</span><h3>Поиск по UUID</h3><form id="find-form"><label>Идентификатор предмета<input id="item-id" placeholder="UUID из ответа при создании" autocomplete="off"></label><p class="muted">UUID сохраняет связь с записью после перезапуска приложения. В режиме final все записи доступны ниже.</p><button class="secondary wide">Найти предмет <span>↗</span></button></form><button type="button" id="anonymous" class="text-button">Проверить вызов без токена → 401</button></article>
 </div>
 <div id="feedback" role="status" aria-live="polite"></div>
 <div id="items" class="items"><div class="empty"><span>◎</span><h3>Начните с одной вещи</h3><p>Создайте запись или найдите её по UUID.<br>Данные хранятся в PostgreSQL.</p></div></div>

@@ -2,6 +2,8 @@ package com.example.lostfound.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfiguration {
     @Bean
-    SecurityFilterChain apiSecurity(HttpSecurity http, SecurityErrors errors) throws Exception {
+    SecurityFilterChain apiSecurity(HttpSecurity http, SecurityErrors errors, Environment env) throws Exception {
         var roles = new JwtGrantedAuthoritiesConverter();
         roles.setAuthoritiesClaimName("roles");
         roles.setAuthorityPrefix("ROLE_");
@@ -26,6 +28,9 @@ public class SecurityConfiguration {
                 .formLogin(f -> f.disable()).httpBasic(b -> b.disable())
                 .authorizeHttpRequests(a -> {
                     a.requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll();
+                    if (env.acceptsProfiles(Profiles.of("final"))) {
+                        a.requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll();
+                    }
                     a.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                             .requestMatchers("/", "/index.html", "/app.css", "/app.js", "/favicon.ico").permitAll()
                             .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()

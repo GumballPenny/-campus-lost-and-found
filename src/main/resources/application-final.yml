@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${CSS_DB_URL}
+    username: ${CSS_DB_USER}
+    password: ${CSS_DB_PASSWORD}
+app:
+  jwt:
+    secret: ${CSS_JWT_SECRET}
+  downstream:
+    base-url: ${CSS_ACCOUNTS_URL}
+    timeout: ${CSS_DOWNSTREAM_TIMEOUT:2s}

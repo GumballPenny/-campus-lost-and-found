@@ -1,4 +1,4 @@
-name: Verify Lab 5
+name: Verify Campus services
 on:
   push:
   pull_request:
@@ -14,6 +14,14 @@ jobs:
           POSTGRES_PASSWORD: css
         ports: ["5432:5432"]
         options: --health-cmd "pg_isready -U css -d campus_items" --health-interval 5s --health-timeout 3s --health-retries 20
+      accounts-db:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: campus_accounts
+          POSTGRES_USER: css
+          POSTGRES_PASSWORD: css
+        ports: ["5433:5432"]
+        options: --health-cmd "pg_isready -U css -d campus_accounts" --health-interval 5s --health-timeout 3s --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -26,3 +34,35 @@ jobs:
           DB_URL: jdbc:postgresql://localhost:5432/campus_items
           DB_USERNAME: css
           DB_PASSWORD: css
+      - run: mvn -q -f services/accounts-service/pom.xml verify
+        env:
+          ACCOUNTS_DB_URL: jdbc:postgresql://localhost:5433/campus_accounts
+          ACCOUNTS_DB_USER: css
+          ACCOUNTS_DB_PASSWORD: css
+          CSS_JWT_SECRET: ci-only-random-looking-key-with-more-than-32-characters
+          CSS_CUSTODIAN_INVITE: ci-only-invitation-for-tests
+      - run: sh scripts/setup-env.sh && docker compose config --quiet
+  compose-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh scripts/setup-env.sh
+      - run: docker compose up -d --build --wait --wait-timeout 240
+      - name: Register, persist and log in after restart
+        run: |
+          set -eu
+          base=http://localhost:8080
+          credentials='{"username":"compose.test","password":"runner-only-password"}'
+          account='{"username":"compose.test","password":"runner-only-password","displayName":"Compose smoke"}'
+          token=$(curl -fsS "$base/api/v1/auth/register" -H 'Content-Type: application/json' -d "$account" | jq -er .accessToken)
+          curl -fsS "$base/api/v1/lost-items" -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+            -d '{"businessKey":"LF-COMPOSE","title":"Test backpack"}' | jq -e '.status == "REPORTED"'
+          docker compose stop accounts items
+          docker compose up -d --wait --wait-timeout 180
+          token=$(curl -fsS "$base/api/v1/auth/login" -H 'Content-Type: application/json' -d "$credentials" | jq -er .accessToken)
+          curl -fsS "$base/api/v1/lost-items" -H "Authorization: Bearer $token" | jq -e 'any(.[]; .businessKey == "LF-COMPOSE")'
+      - if: failure()
+        run: docker compose logs --tail=120
+      - if: always()
+        run: docker compose down -v

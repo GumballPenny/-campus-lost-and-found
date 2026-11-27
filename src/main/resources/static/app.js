@@ -1,6 +1,7 @@
 'use strict';
 let accessToken = null;
 let expiresAt = 0;
+let mode = 'login';
 const records = new Map();
 const $ = selector => document.querySelector(selector);
 const labels = {REPORTED:'Заявлена потеря',FOUND:'Предмет найден',RETURNED:'Возвращён владельцу'};
@@ -74,13 +75,34 @@ async function markFound(id) {
     }
     records.set(id,result.data);renderItems();feedback($('#feedback'),'200 · Находка подтверждена. Новый статус: '+result.data.status);
 }
+async function loadItems() {
+    if(!accessToken) {feedback($('#feedback'),'Для загрузки записей войдите в аккаунт.',true);return;}
+    const result=await api('/api/v1/lost-items');
+    if(result.response.ok&&Array.isArray(result.data)) {
+        records.clear();result.data.forEach(item=>records.set(item.id,item));renderItems();
+        feedback($('#feedback'),'200 · Загружено записей: '+result.data.length);
+    } else if(result.response.status===404) {
+        feedback($('#feedback'),'В dev-режиме используйте создание или поиск по UUID. Список доступен в final.');
+    } else showError($('#feedback'),result);
+}
+document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{
+    mode=button.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===button));
+    document.querySelectorAll('.register-only').forEach(el=>el.classList.toggle('hidden',mode!=='register'));
+    $('#display-name').required=mode==='register';
+    $('#password').autocomplete=mode==='register'?'new-password':'current-password';
+    $('#auth-submit').textContent=mode==='register'?'Создать аккаунт ↗':'Войти в аккаунт ↗';
+    $('#auth-help').textContent=mode==='register'?'Регистрация работает в режиме final через отдельный сервис аккаунтов.':'JWT хранится только в памяти этой вкладки.';
+    $('#auth-error').replaceChildren();
+}));
 $('#auth-form').addEventListener('submit',async event=>{
     event.preventDefault();accessToken=null;
     const button=$('#auth-submit');button.disabled=true;
     try {
         const body={username:$('#username').value,password:$('#password').value};
-        const result=await api('/api/v1/auth/login',{method:'POST',body});
-        $('#password').value='';
+        if(mode==='register') {body.displayName=$('#display-name').value;body.invitation=$('#invitation').value;}
+        const result=await api('/api/v1/auth/'+mode,{method:'POST',body});
+        $('#password').value='';$('#invitation').value='';
         if(!result.response.ok) {showError($('#auth-error'),result);return;}
         accessToken=result.data.accessToken;expiresAt=Date.now()+result.data.expiresIn*1000;
         const me=await api('/api/me');
@@ -110,6 +132,7 @@ $('#create-form').addEventListener('submit',async event=>{
 });
 $('#find-form').addEventListener('submit',event=>{event.preventDefault();readItem($('#item-id').value).catch(()=>feedback($('#feedback'),'Сервер недоступен.',true));});
 $('#anonymous').onclick=()=>readItem($('#item-id').value||'00000000-0000-0000-0000-000000000000',true).catch(()=>feedback($('#feedback'),'Сервер недоступен.',true));
+$('#refresh').onclick=()=>loadItems().catch(()=>feedback($('#feedback'),'Сервер недоступен.',true));
 setInterval(()=>{
     if(!accessToken)return;
     const left=Math.max(0,Math.ceil((expiresAt-Date.now())/1000));

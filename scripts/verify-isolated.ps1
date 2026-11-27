@@ -16,7 +16,7 @@ try {
     & "$pgBin/pg_ctl.exe" -D $data -l "$data/server.log" -o "-p $port -h 127.0.0.1 -c max_connections=100" -w start
     if ($LASTEXITCODE) { throw 'Cannot start isolated test PostgreSQL.' }
     $started=$true
-    foreach ($dbName in @('campus_items')) {
+    foreach ($dbName in @('campus_items','campus_accounts')) {
         $exists=& "$pgBin/psql.exe" -h 127.0.0.1 -p $port -U css -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$dbName'"
         if ($exists -ne '1') {
             & "$pgBin/createdb.exe" -h 127.0.0.1 -p $port -U css $dbName
@@ -27,7 +27,16 @@ try {
     $env:DB_URL="jdbc:postgresql://127.0.0.1:$port/campus_items"
     $env:DB_USERNAME='css'; $env:DB_PASSWORD='css'
     & "$PSScriptRoot/maven.ps1" '-q' 'verify'
-    Write-Output 'PASS: items service tests passed in isolated PostgreSQL. Existing css database was not used.'
+    $accountsPom=Join-Path $projectRoot 'services/accounts-service/pom.xml'
+    if (Test-Path $accountsPom) {
+        Remove-Item Env:SPRING_PROFILES_ACTIVE
+        $env:ACCOUNTS_DB_URL="jdbc:postgresql://127.0.0.1:$port/campus_accounts"
+        $env:ACCOUNTS_DB_USER='css'; $env:ACCOUNTS_DB_PASSWORD='css'
+        $env:CSS_JWT_SECRET='isolated-test-only-key-with-more-than-32-characters'
+        $env:CSS_CUSTODIAN_INVITE='isolated-test-only-invitation'
+        & "$PSScriptRoot/maven.ps1" '-q' '-f' $accountsPom 'verify'
+    }
+    Write-Output 'PASS: all available service suites passed in isolated PostgreSQL. Existing css database was not used.'
 } finally {
     if ($started) { & "$pgBin/pg_ctl.exe" -D $data -m fast -w stop }
 }
