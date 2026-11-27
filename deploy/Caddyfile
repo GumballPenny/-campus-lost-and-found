@@ -1,0 +1,9 @@
+{$CAMPUS_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy items:8080
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy same-origin
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+}

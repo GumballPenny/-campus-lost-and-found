@@ -1,0 +1,87 @@
+name: campus-lost-found
+services:
+  items-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: campus_items
+      POSTGRES_USER: campus
+      POSTGRES_PASSWORD: ${ITEMS_DB_PASSWORD:?Run setup-env first}
+    volumes:
+      - items-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campus -d campus_items"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  accounts-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: campus_accounts
+      POSTGRES_USER: campus
+      POSTGRES_PASSWORD: ${ACCOUNTS_DB_PASSWORD:?Run setup-env first}
+    volumes:
+      - accounts-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campus -d campus_accounts"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  accounts:
+    build: ./services/accounts-service
+    environment:
+      ACCOUNTS_DB_URL: jdbc:postgresql://accounts-db:5432/campus_accounts
+      ACCOUNTS_DB_USER: campus
+      ACCOUNTS_DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD}
+      CSS_JWT_SECRET: ${CSS_JWT_SECRET:?Run setup-env first}
+      CSS_CUSTODIAN_INVITE: ${CSS_CUSTODIAN_INVITE:?Run setup-env first}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+    depends_on:
+      accounts-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  items:
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: final
+      CSS_DB_URL: jdbc:postgresql://items-db:5432/campus_items
+      CSS_DB_USER: campus
+      CSS_DB_PASSWORD: ${ITEMS_DB_PASSWORD}
+      CSS_JWT_SECRET: ${CSS_JWT_SECRET}
+      CSS_ACCOUNTS_URL: http://accounts:8081
+      CSS_DOWNSTREAM_TIMEOUT: 2s
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    depends_on:
+      items-db:
+        condition: service_healthy
+      accounts:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    image: caddy:2-alpine
+    profiles: ["public"]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      CAMPUS_DOMAIN: ${CAMPUS_DOMAIN:-localhost}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      items:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  items-data:
+  accounts-data:
+  caddy-data:
+  caddy-config:

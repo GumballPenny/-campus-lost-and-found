@@ -79,4 +79,11 @@ public class LostItemJpa implements LostItemRepository {
         return changed == 1;
     }
 
+    @Override
+    public java.util.List<LostItem> list() {
+        return entityManager.createQuery("select i from LostItemEntity i order by i.createdAt desc", LostItemEntity.class)
+                .setMaxResults(100).getResultStream()
+                .map(e -> new LostItem(new LostItemId(e.getId()), new LostItemKey(e.getBusinessKey()),
+                        LostItemStatus.valueOf(e.getStatus()), e.getTitle())).toList();
+    }
 }

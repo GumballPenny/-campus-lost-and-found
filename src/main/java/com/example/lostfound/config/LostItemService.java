@@ -67,6 +67,9 @@ public class LostItemService implements LostItemUseCase {
         return new LostItem(item.id(), item.key(), LostItemStatus.FOUND, item.title());
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<LostItem> list() { return repository.list(); }
+
     @Transactional
     public void insertTwice(LostItemKey key) {
         try {

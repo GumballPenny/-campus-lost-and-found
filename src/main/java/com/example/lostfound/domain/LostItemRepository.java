@@ -13,4 +13,5 @@ public interface LostItemRepository {
 
     boolean changeStatus(LostItemId id, LostItemStatus from, LostItemStatus to, String actor);
 
+    java.util.List<LostItem> list();
 }

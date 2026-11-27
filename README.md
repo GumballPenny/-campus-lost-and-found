@@ -1,7 +1,25 @@
-# Campus Lost & Found — Lab 5
+# Campus Lost & Found
 
-CSS-67. Java 21 / Spring Boot 3.4.13. This is the standalone Lab 5 submission
-for the Campus Lost & Found semester product.
+Java 21 / Spring Boot 3.4.13. The same semester product: register a lost item,
+read it by UUID and let a custodian confirm that it was found.
+
+- [Запуск и демонстрация по шагам](docs/START_RU.md)
+- [Защита кода и термины](docs/DEFENSE_RU.md)
+- [Критерии и результаты проверок](docs/CRITERIA.md)
+- [Размещение на сервере](deploy/README.md)
+
+## Submission variants
+
+Lab 5 forbids users tables, Docker and real outbound calls. The final project
+requires them. Review these variants separately, in the same repository.
+
+| Branch/profile | Authentication | Deployment |
+|---|---|---|
+| `lab5-security` / `dev` | Two BCrypt in-memory users | One Spring process + PostgreSQL; no accounts service or Docker files in this branch |
+| `final-microservices` / `final` | Registration and persisted users in accounts | Two Spring services, two databases, Docker Compose, optional Caddy HTTPS |
+
+Do not submit the final branch as the strict Lab 5 hand-in. Jira story: **CSS-67**.
+
 ## Lab 5 access rules
 
 Product issuer: `campus-lost-and-found`. Junior: **FINDER**. Senior: **CUSTODIAN**.
@@ -39,31 +57,94 @@ All errors contain only `code`, `message`, `correlationId`. Supplied
 `Authentication.getName()`, never JSON. CSRF, form login and Basic are disabled;
 session policy is stateless. Unmatched routes are denied.
 
+## Package diagram
 
-## Run the lab
+```text
+dto        client           handler          security        config
+           RestClient       REST             JWT/filters     Application
+                \              |                 /           @Service
+                         domain (plain Java) <------------------+
+                Id, Key, Status, Policy, Rule, Repository port
+                                    ^
+                               persistence
+                        LostItemEntity / LostItemJpa
+                                    |
+                                PostgreSQL
+```
 
-Use your local PostgreSQL with a database named css. The database user must own
-the existing tables and be able to run the migrations.
+Domain imports no Spring, JDBC or JPA. `dto` remains reserved. Client performs
+real HTTP calls only in final.
 
-    powershell -ExecutionPolicy Bypass -File scripts/start-dev.ps1
+## Final service boundaries
 
-Enter the PostgreSQL user and password. Open http://localhost:8080/.
-Log in as finder (password campus-dev), create a lost item with a unique business
-key, and try the found action. It returns 403 and the row remains REPORTED.
-Log out, sign in as custodian (campus-dev), then repeat: 200 and FOUND.
-Log out and click the anonymous request check: 401.
+```text
+Browser → [Caddy HTTPS on server] → items :8080 → items-db
+                                   |
+                                   | HTTP login/register
+                                   v
+                                accounts :8081 → accounts-db
+```
 
-The page, health endpoint and /swagger-ui.html are public.
-V1 remains unchanged. V2 creates the item status audit, not an accounts table.
-The domain (Id/Key/Status/Rules/Policy) remains plain Java.
-Flyway owns migrations and Hibernate validates their result.
+Accounts owns `users` and `auth_event`: registration, BCrypt, authentication,
+token issuing. Items validates tokens locally and owns `lost_item` and
+`lost_item_event`. Separate builds, processes, ports, databases and migrations.
+No shared database, cross-service SQL, Kafka or distributed transaction.
+Compose does not publish accounts/database ports.
 
-## Verify in an isolated PostgreSQL 18 database
+Public signup creates FINDER. CUSTODIAN needs the server invitation
+`CSS_CUSTODIAN_INVITE`, not a client `role`. Keep the invitation private.
+The frontend is served by items from `src/main/resources/static/`.
 
-    powershell -ExecutionPolicy Bypass -File scripts/verify-isolated.ps1
+## Existing contracts and migrations
 
-This script uses a separate instance, not your demo data. Tests cover real token
-issue/decode, login, 401/403/senior success, old Lab 4 201/400/404/409, and the
-Lab 3 rollback counts 0 and 1. The GitHub workflow runs Maven verify as well.
+- POST `/api/v1/lost-items`: 201 + Location; validation 400, duplicate key 409.
+- GET `/api/v1/lost-items/{uuid}`: 200; malformed UUID 400; absent item 404.
+- Locked action violating domain policy: 409, unchanged row.
+- Final-only GET `/api/v1/lost-items`: latest 100 records.
+- `/swagger-ui.html`, `/v3/api-docs` public; protected execution needs Bearer.
+- Actuator exposes health/info; only health is public.
 
-[PR checklist](docs/PR_LAB5.md)
+Root V1 is unchanged; V2 adds status audit. Accounts has its own V1 and its own
+`flyway_schema_history` in a different database. Flyway creates tables, Hibernate
+uses `ddl-auto: validate`, `open-in-view: false`. Tests DELETE rows, not DROP tables.
+Lab 3 counts remain **0** for rollback and **1** for an earlier committed request.
+
+## Run
+
+With a configured development PostgreSQL database:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/maven.ps1 spring-boot:run
+```
+
+Open http://localhost:8080/. `scripts/maven.ps1` can use IntelliJ bundled Maven.
+`scripts/verify-isolated.ps1` tests both services in a separate PostgreSQL cluster
+without touching the existing `css` database.
+
+Final, with Docker Engine running:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-env.ps1
+docker compose up -d --build
+docker compose ps
+```
+
+Open http://localhost:8080/, register your own account. For the senior demo read
+the invitation locally from `.env`; never commit it. `docker compose down` stops
+the stack and keeps data volumes. Full instructions are linked above.
+
+## Verification status (2026-11-27)
+
+Root `verify`: **35 tests passed**. Accounts `verify`: **2 tests passed**.
+Both ran against isolated PostgreSQL 18. Two real Spring processes + browser
+confirmed signup 201, login 200, create 201, junior 403 unchanged, senior 200 →
+FOUND, list 200 and anonymous 401. Desktop/mobile screens were inspected.
+
+GitHub Actions successfully built and ran both images with Compose. The smoke
+test registered a user, created an item, restarted the application containers
+and logged in to retrieve the same item. Docker Engine remains unavailable on
+the Windows laptop. Server deployment and public HTTPS are prepared separately.
+
+- [Lab 5 pull request](https://github.com/GumballPenny/-campus-lost-and-found/pull/2)
+- [Final pull request](https://github.com/GumballPenny/-campus-lost-and-found/pull/3)
+- [Successful final verification and Compose smoke run](https://github.com/GumballPenny/-campus-lost-and-found/actions/runs/46015534453)

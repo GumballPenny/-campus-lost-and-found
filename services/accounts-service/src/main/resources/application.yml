@@ -1,0 +1,27 @@
+server:
+  port: ${ACCOUNTS_PORT:8081}
+  error:
+    include-message: never
+    include-stacktrace: never
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+    url: ${ACCOUNTS_DB_URL}
+    username: ${ACCOUNTS_DB_USER}
+    password: ${ACCOUNTS_DB_PASSWORD}
+  flyway:
+    enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+app:
+  jwt-secret: ${CSS_JWT_SECRET}
+  issuer: campus-lost-and-found
+  custodian-invite: ${CSS_CUSTODIAN_INVITE}
