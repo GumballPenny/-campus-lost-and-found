@@ -140,6 +140,11 @@ Both ran against isolated PostgreSQL 18. Two real Spring processes + browser
 confirmed signup 201, login 200, create 201, junior 403 unchanged, senior 200 →
 FOUND, list 200 and anonymous 401. Desktop/mobile screens were inspected.
 
-Local Docker Engine is unavailable: images and Compose runtime are **not yet
-verified**. No public server is provisioned/deployed. Local tests are not proof
-of a published GitHub PR or a deployed website. See the criteria document.
+GitHub Actions successfully built and ran both images with Compose. The smoke
+test registered a user, created an item, restarted the application containers
+and logged in to retrieve the same item. Docker Engine remains unavailable on
+the Windows laptop. Server deployment and public HTTPS are prepared separately.
+
+- [Lab 5 pull request](https://github.com/GumballPenny/-campus-lost-and-found/pull/2)
+- [Final pull request](https://github.com/GumballPenny/-campus-lost-and-found/pull/3)
+- [Successful final verification and Compose smoke run](https://github.com/GumballPenny/-campus-lost-and-found/actions/runs/46015534453)

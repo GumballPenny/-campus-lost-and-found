@@ -37,8 +37,8 @@
 | Flyway | Отдельная история миграций у каждой БД; root V1 не переписана | При размещении стартовать на чистых собственных базах |
 | Логи действий | auth_event и lost_item_event; Flyway создаёт их структуру | Flyway history — история схемы, не журнал действий |
 | Полноценный frontend | Вход/регистрация/роль/вещи/поиск/смена/выход, desktop/mobile | Реальные UI 201/403/200/401 проверены локально |
-| Docker | Два Dockerfile, Compose с 2 БД и healthcheck. `docker compose config --quiet` прошёл | Engine на ноутбуке недоступен. Docker smoke-тест входит в GitHub workflow |
-| GitHub | Ветки CSS-67, workflow, тексты PR | Публикацию и CI считать завершёнными только после push и зелёного GitHub run |
+| Docker | Два образа собраны и запущены на GitHub Actions. Регистрация и сохранение вещи пережили перезапуск контейнеров | На ноутбуке Docker Engine недоступен |
+| GitHub | Lab 5 PR #2, final PR #3. GitHub Actions успешно прошёл в обоих | — |
 | Сервер | VPS-инструкция, Caddy, HTTPS, env и backup | Пользователь сообщил, что сервера пока нет; покупка/адрес/домен и deployment ещё нужны |
 | Презентация | Подготовлена отдельная презентация на 10 слайдов | Не заменяет живую демонстрацию |
 | Без Kafka | Kafka не добавлена | — |
@@ -53,8 +53,10 @@
   junior locked 403 с REPORTED, senior locked 200 с FOUND, list 200, anonymous 401.
 - Web slices используют работающие security filters, jwt() и mock service;
   настоящий token дополнительно проверен encoder → decoder и HTTP-тестом.
-- Никаких выдуманных скриншотов сервера/контейнеров. Пока нет сервера и живого
-  Docker runtime, эти два результата остаются неподтверждёнными.
+- [Lab 5 CI](https://github.com/GumballPenny/-campus-lost-and-found/actions/runs/46015527273)
+  прошёл. [Final CI](https://github.com/GumballPenny/-campus-lost-and-found/actions/runs/46015534453)
+  прошёл оба задания: Maven verify и реальный запуск Compose.
+- Развёртывание на VPS и публичный HTTPS проверяются после появления сервера.
 
 ## Ограничения учебного final
 

@@ -15,9 +15,10 @@ full registration and item workflow. Compose and Caddy prepare server deployment
 - [x] Dockerfiles, volumes, private internal ports, healthchecks and env generator
 - [x] Deployment guide, Caddy HTTPS configuration and backup steps
 - [x] CSS-67; no committed .env/build output
-- [ ] Docker image build and live Compose run (local Engine unavailable)
+- [x] Docker builds and live Compose run on GitHub Actions
+- [x] Registered account and item survive app container restart
+- [x] [GitHub Maven and Compose checks passed](https://github.com/GumballPenny/-campus-lost-and-found/actions/runs/46015534453)
 - [ ] Public server provisioned, DNS configured, HTTPS deployment verified
-- [ ] GitHub CI run green after publication
 
 Review this against lab5-security to see only final additions. The final branch
 intentionally contains features forbidden in the separate Lab 5 hand-in.
